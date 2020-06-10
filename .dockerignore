@@ -1,0 +1,9 @@
+*.csproj.user
+*.md
+.dockerignore
+.git
+.gitignore
+.vs
+bin
+Dockerfile
+obj

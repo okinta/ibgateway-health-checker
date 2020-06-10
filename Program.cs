@@ -31,9 +31,17 @@ namespace IbGatewayHealthChecker
                 .WithParsedAsync(program.Run);
         }
 
+        /// <summary>
+        /// Monitors a connection to IB in the background. Waits until a signal is
+        /// received to exit the program.
+        /// </summary>
+        /// <param name="opts">The parsed command line options.</param>
         private async Task Run(Options opts)
         {
-            throw new NotImplementedException();
+            using var _ = new IbClient(
+                opts.Host, opts.Port, opts.ClientId, opts.PagerTreeIntegrationId);
+            await _exitEvent.WaitAsync();
+            await ConsoleX.WriteLineAsync("Goodbye");
         }
 
         /// <summary>

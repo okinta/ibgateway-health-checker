@@ -92,11 +92,13 @@ namespace IbGatewayHealthChecker
                     await CheckConnection(tws, token);
                     await tws.RequestPositions();
 
-                    if (incident == null) continue;
-                    await incident.Resolve(token);
-                    incident = null;
-                    await ConsoleX.WriteLineAsync(
-                        "Resolved PagerTree incident", token);
+                    if (incident != null)
+                    {
+                        await incident.Resolve(token);
+                        incident = null;
+                        await ConsoleX.WriteLineAsync(
+                            "Resolved PagerTree incident", token);
+                    }
                 }
                 catch (Exception e)
                 {

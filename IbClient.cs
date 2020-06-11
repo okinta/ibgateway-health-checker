@@ -12,7 +12,6 @@ namespace IbGatewayHealthChecker
     internal class IbClient : IDisposable
     {
         private CancellationTokenSource Token { get; } = new CancellationTokenSource();
-        private const int ConnectionTimeout = 15000;
         private const int Sleep = 15000;
         private Task Task { get; }
 
@@ -122,7 +121,7 @@ namespace IbGatewayHealthChecker
         {
             try
             {
-                await tws.EnsureConnectedAsync(ConnectionTimeout, token);
+                await tws.EnsureConnectedAsync(token);
             }
             catch (TimeoutException e)
             {

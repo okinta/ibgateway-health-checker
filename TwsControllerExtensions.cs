@@ -16,31 +16,24 @@ namespace IbGatewayHealthChecker
         /// </summary>
         /// <param name="tws">The TwsController instance to use to check if the connection
         /// is active.</param>
-        /// <param name="millisecondsTimeout">The total milliseconds to wait before
-        /// throwing a TimeoutException.</param>
-        /// <param name="token">The optional token to check for canceling the
-        /// connection.</param>
-        /// <exception cref="TimeoutException">If <paramref name="millisecondsTimeout"/>
-        /// passes without the connection establishing.</exception>
+        /// <param name="token">The token to check for canceling the connection.</param>
+        /// <exception cref="TimeoutException">If the task times out before a connection
+        /// is established.</exception>
         /// <exception cref="TaskCanceledException">If the task is canceled via
         /// <paramref name="token"/>.</exception>
         public static async Task EnsureConnectedAsync(
-            this ITwsControllerBase tws, int millisecondsTimeout,
-            CancellationToken token = default)
+            this ITwsControllerBase tws, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
-            var timeoutToken = CancellationTokenSource.CreateLinkedTokenSource(token);
-            timeoutToken.CancelAfter(millisecondsTimeout);
 
             try
             {
                 await tws.EnsureConnectedAsync().WaitAsync(token);
                 token.ThrowIfCancellationRequested();
             }
-            catch (TaskCanceledException e) when (timeoutToken.IsCancellationRequested)
+            catch (TaskCanceledException e) when (!token.IsCancellationRequested)
             {
-                throw new TimeoutException(
-                    $"Timed out after {millisecondsTimeout} milliseconds", e);
+                throw new TimeoutException("Connection timed out", e);
             }
         }
     }

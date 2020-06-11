@@ -77,6 +77,7 @@ namespace IbGatewayHealthChecker
         {
             Incident incident = null;
             ITwsControllerBase tws = null;
+            var connected = false;
 
             while (!token.IsCancellationRequested)
             {
@@ -99,10 +100,17 @@ namespace IbGatewayHealthChecker
                         await ConsoleX.WriteLineAsync(
                             "Resolved PagerTree incident", token);
                     }
+
+                    if (!connected)
+                    {
+                        await ConsoleX.WriteLineAsync("Active", token);
+                        connected = true;
+                    }
                 }
                 catch (Exception e)
                 {
                     tws = null;
+                    connected = false;
 
                     if (incident is null && !string.IsNullOrEmpty(pagerTreeIntId))
                     {

@@ -125,18 +125,21 @@ namespace IbGatewayHealthChecker
             }
             catch (TimeoutException e)
             {
-                await tws.DisconnectAsync();
+                if (tws.Connected)
+                    await tws.DisconnectAsync();
                 throw new ConnectionException(
                     "Timed out waiting for connection to establish", e);
             }
             catch (TaskCanceledException)
             {
-                await tws.DisconnectAsync();
+                if (tws.Connected)
+                    await tws.DisconnectAsync();
                 throw;
             }
             catch (Exception e)
             {
-                await tws.DisconnectAsync();
+                if (tws.Connected)
+                    await tws.DisconnectAsync();
                 throw new ConnectionException(e.Message, e);
             }
 
@@ -146,13 +149,15 @@ namespace IbGatewayHealthChecker
             }
             catch (TaskCanceledException e)
             {
-                await tws.DisconnectAsync();
+                if (tws.Connected)
+                    await tws.DisconnectAsync();
                 throw new ConnectionException(
                     "Timed out waiting for response from establish", e);
             }
             catch (Exception e)
             {
-                await tws.DisconnectAsync();
+                if (tws.Connected)
+                    await tws.DisconnectAsync();
                 throw new ConnectionException(e.Message, e);
             }
         }

@@ -1,5 +1,9 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers.Controllers;
 using AutoFinance.Broker.InteractiveBrokers;
+using DnsClient.Protocol;
+using DnsClient;
+using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
@@ -72,13 +76,19 @@ namespace IbGatewayHealthChecker
             CancellationToken token)
         {
             Incident incident = null;
-            var factory = new TwsObjectFactory(host, port, clientId);
-            var tws = factory.TwsController;
+            ITwsControllerBase tws = null;
 
             while (!token.IsCancellationRequested)
             {
                 try
                 {
+                    if (tws is null)
+                    {
+                        var ip = await GetIpAddress(host, token);
+                        tws = new TwsObjectFactory(ip.ToString(), port, clientId)
+                            .TwsController;
+                    }
+
                     await CheckConnection(tws, token);
                     await tws.RequestPositions();
 
@@ -88,8 +98,10 @@ namespace IbGatewayHealthChecker
                     await ConsoleX.WriteLineAsync(
                         "Resolved PagerTree incident", token);
                 }
-                catch (ConnectionException e)
+                catch (Exception e)
                 {
+                    tws = null;
+
                     if (incident is null && !string.IsNullOrEmpty(pagerTreeIntId))
                     {
                         incident = new Incident(
@@ -159,6 +171,36 @@ namespace IbGatewayHealthChecker
                 if (tws.Connected)
                     await tws.DisconnectAsync();
                 throw new ConnectionException(e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Performs a DNS query to resolve the given host to an IPAddress.
+        /// </summary>
+        /// <param name="host">The host to resolve.</param>
+        /// <param name="token">The token to check for cancellation requests.</param>
+        /// <returns>The resolved IPAddress of the <paramref name="host"/>.</returns>
+        private static async Task<IPAddress> GetIpAddress(
+            string host, CancellationToken token)
+        {
+            if (IPAddress.TryParse(host, out var address)) return address;
+
+            var lookupClient = new LookupClient();
+            var result = await lookupClient.QueryAsync(
+                new DnsQuestion(host, QueryType.A), token);
+
+            // Pick a random record
+            try
+            {
+                return result.AllRecords
+                    .OfType<AddressRecord>()
+                    .OrderBy(x => Guid.NewGuid())
+                    .First().Address;
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException(
+                    $"Could not resolve {host}", nameof(host), e);
             }
         }
     }

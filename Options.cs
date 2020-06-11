@@ -19,7 +19,7 @@ namespace IbGatewayHealthChecker
             HelpText = "The client ID to connect to IB as")]
         public int ClientId { get; set; }
 
-        [Option('p', "pagertree-int-id",
+        [Option('x', "pagertree-int-id",
             HelpText = "The PagerTree integration ID to notify if IB is unavailable")]
         public string PagerTreeIntegrationId { get; set; }
     }
